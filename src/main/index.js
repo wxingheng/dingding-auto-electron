@@ -2,6 +2,8 @@
 
 import { app, BrowserWindow, ipcMain } from "electron";
 const shell = require("shelljs");
+const exec = require('child_process').exec;
+
 
 /**
  * Set `__static` path to static files in production
@@ -56,7 +58,7 @@ app.on("activate", () => {
 
 console.log("main---");
 console.log(shell.exec("adb devices"));
-shell.exec("adb -s 91QEBP8563ST shell input keyevent 26");
+exec("adb -s 91QEBP8563ST shell input keyevent 26");
 
 ipcMain.on("render-event", function(event, arg) {
   console.log("render-event---", arg);
