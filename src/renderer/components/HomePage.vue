@@ -66,6 +66,21 @@
               <div slot="header" class="clearfix">
                 <span>流程配置</span>
               </div>
+              <el-form :inline="true" label-width="40px">
+                <el-form-item :label="'延迟'">
+                  <el-input v-model="add.duration"></el-input>
+                </el-form-item>
+                <el-form-item label="名称">
+                  <el-input v-model="add.text"></el-input>
+                </el-form-item>
+                <el-form-item label="点位">
+                  <el-input v-model="add.positon"></el-input>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="addStep(0)">插入</el-button>
+                  <el-button type="primary" @click="addStep(1)">追加</el-button>
+                </el-form-item>
+              </el-form>
               <el-form v-for="(item, i) in form.flows" :key="i" :inline="true" label-width="120px">
                 <el-form-item :label="(i+1) + ' 延迟等待'">
                   <el-input v-model="item.duration"></el-input>
@@ -73,6 +88,9 @@
                 <el-form-item label>毫秒，{{item.text}}</el-form-item>
                 <el-form-item label="像素点">
                   <el-input v-model="item.positon"></el-input>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="removeStep(i)">删除</el-button>
                 </el-form-item>
               </el-form>
             </el-card>
@@ -147,7 +165,12 @@ export default {
   data() {
     return {
       form,
-      logs: []
+      logs: [],
+      add: {
+        duration: 10000,
+        text: "点击“xxxx”",
+        positon: "x y"
+      }
     };
   },
   methods: {
@@ -204,6 +227,20 @@ export default {
         type: "test-flows",
         data
       });
+    },
+    addStep(type) {
+      switch (type) {
+        case 0:
+          this.form.flows.unshift(this.add);
+          break;
+        case 1:
+          this.form.flows.push(this.add);
+          break;
+      }
+    },
+    removeStep(i) {
+      console.log(123);
+      this.form.flows.splice(i, 1);
     }
   },
   mounted() {
