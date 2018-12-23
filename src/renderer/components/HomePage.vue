@@ -128,6 +128,10 @@ export default {
     save() {
       console.log("save---");
       console.log(this.form);
+      this.$electron.ipcRenderer.send("render-event", {
+        type: "save-config",
+        data: JSON.stringify({ ...this.form })
+      });
     },
     startRun() {
       console.log("startTun---");

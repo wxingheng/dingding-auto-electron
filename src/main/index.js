@@ -55,9 +55,6 @@ app.on("activate", () => {
   }
 });
 
-console.log("main---");
-// console.log("adb devices-----", JSON.stringify(exec("adb devices")));
-
 ipcMain.on("render-event", function(event, arg) {
   console.log("render-event---", arg);
   switch (arg.type) {
