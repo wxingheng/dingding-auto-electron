@@ -1,80 +1,106 @@
 <template>
   <div id="wrapper">
     <el-row>
-      <el-col :span="24">
-        <el-card class="box-card">
-          <div slot="header" class="clearfix">
-            <span>打卡设备</span>
-          </div>
-          <el-form :inline="true" label-width="120px">
-            <el-form-item label="手机设备号">
-              <el-input v-model="form.devices"></el-input>
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="handleTest()">测试(点亮设备)</el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
-      </el-col>
-      <el-col :span="24">
-        <el-card class="box-card">
-          <div slot="header" class="clearfix">
-            <span>基本配置</span>
-          </div>
-          <el-form label-width="120px">
-            <el-form-item label="上班时间">
-              <el-time-picker
-                v-model="form.startTime"
-                :picker-options="{
-                  selectableRange: '6:00:00 - 12:00:00'
+      <el-col :span="16">
+        <el-row>
+          <el-col :span="24">
+            <el-card class="box-card">
+              <div slot="header" class="clearfix">
+                <span>打卡设备</span>
+              </div>
+              <el-form :inline="true" label-width="120px">
+                <el-form-item label="手机设备号">
+                  <el-input :disabled="true" v-model="form.devices"></el-input>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="handleTest()">测试(点亮设备)</el-button>
+                </el-form-item>
+              </el-form>
+            </el-card>
+          </el-col>
+          <el-col :span="24" class="mg-top">
+            <el-card class="box-card">
+              <div slot="header" class="clearfix">
+                <span>基本配置</span>
+              </div>
+              <el-form label-width="120px">
+                <el-form-item label="上班时间">
+                  <el-time-select
+                    v-model="form.startTime"
+                    :picker-options="{
+                  start: '00:00',
+                  step: '00:01',
+                  end: '23:59'
                 }"
-                placeholder="上班时间"
-              ></el-time-picker>
-            </el-form-item>
-            <el-form-item label="下班时间">
-              <el-time-picker
-                v-model="form.endTime"
-                :picker-options="{
-                  selectableRange: '12:00:00 - 23:00:00'
+                    placeholder="选择时间"
+                  ></el-time-select>
+                </el-form-item>
+                <el-form-item label="下班时间">
+                  <el-time-select
+                    v-model="form.endTime"
+                    :picker-options="{
+                  start: '00:00',
+                  step: '00:01',
+                  end: '23:59'
                 }"
-                placeholder="下班时间"
-              ></el-time-picker>
-            </el-form-item>
-            <el-form-item label="邮箱账号">
-              <el-input v-model="form.email"></el-input>
-            </el-form-item>
-            <el-form-item label="邮箱秘钥">
-              <el-input v-model="form.emailPWD"></el-input>
-            </el-form-item>
-            <el-form-item label="截图保存路径">
-              <el-input v-model="form.screenPath"></el-input>
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="testScreen()">测试截屏并发送邮箱</el-button>
-            </el-form-item>
-          </el-form>
-        </el-card>
+                    placeholder="选择时间"
+                  ></el-time-select>
+                </el-form-item>
+                <el-form-item label="邮箱账号">
+                  <el-input v-model="form.email"></el-input>
+                </el-form-item>
+                <el-form-item label="邮箱秘钥">
+                  <el-input v-model="form.emailPWD"></el-input>
+                </el-form-item>
+                <el-form-item label="截图保存路径">
+                  <el-input :disabled="true" v-model="form.screenPath"></el-input>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="testScreen()">测试(截屏并发送邮箱)</el-button>
+                </el-form-item>
+              </el-form>
+            </el-card>
+          </el-col>
+          <el-col :span="24" class="mg-top">
+            <el-card class="box-card">
+              <div slot="header" class="clearfix">
+                <span>流程配置</span>
+              </div>
+              <el-form v-for="(item, i) in form.flows" :key="i" :inline="true" label-width="120px">
+                <el-form-item :label="(i+1) + ' 延迟等待'">
+                  <el-input v-model="item.duration"></el-input>
+                </el-form-item>
+                <el-form-item label>毫秒，{{item.text}}</el-form-item>
+                <el-form-item label="像素点">
+                  <el-input v-model="item.positon"></el-input>
+                </el-form-item>
+              </el-form>
+            </el-card>
+          </el-col>
+          <el-col :span="24" class="mg-top mg-bt">
+            <el-button type="primary" @click="save()">保存</el-button>
+            <el-button type="primary" @click="testFlows()">测试流程</el-button>
+            <el-button type="primary" @click="startRun()">开始运行</el-button>
+            <el-button type="primary" @click="stopRun()">结束运行</el-button>
+          </el-col>
+        </el-row>
       </el-col>
-      <el-col :span="24">
+      <el-col :span="8">
         <el-card class="box-card">
           <div slot="header" class="clearfix">
-            <span>流程配置</span>
+            <span>运行日志</span>
           </div>
-          <el-form v-for="(item, i) in form.flows" :key="i" :inline="true" label-width="120px">
-            <el-form-item label="延迟等待">
-              <el-input v-model="item.duration"></el-input>
-            </el-form-item>
-            <el-form-item label>秒，{{item.text}}</el-form-item>
-            <el-form-item label="像素点">
-              <el-input v-model="item.positon"></el-input>
-            </el-form-item>
-          </el-form>
+          <div class="logs">
+            <el-alert
+              v-for="(item, i) in logs"
+              :key="i"
+              :title="`${i}: ${item.text}`"
+              type="info"
+              :closable="false"
+              show-icon
+            ></el-alert>
+          </div>
         </el-card>
-      </el-col>
-      <el-col :span="24">
-        <el-button type="primary" @click="save()">保存</el-button>
-        <el-button type="primary" @click="startRun()">开始运行</el-button>
-        <el-button type="primary" @click="stopRun()">结束运行</el-button>
       </el-col>
     </el-row>
   </div>
@@ -82,44 +108,50 @@
 
 <script>
 import * as moment from "moment";
+const { ipcRenderer } = require("electron");
+const form = localStorage.getItem("DINGDINGCONFIG")
+  ? {
+      ...JSON.parse(localStorage.getItem("DINGDINGCONFIG"))
+    }
+  : {
+      devices: "91QEBP8563ST",
+      startTime: "08:40", // new Date(moment("2018-01-01 09:00")),
+      endTime: "18:35", //new Date(moment("2018-01-01 19:59")),
+      email: "1228678518@qq.com",
+      emailPWD: "dzurdbumhdlgichd",
+      screenPath: "E:\\",
+      flows: [
+        {
+          text: "点击“钉钉打卡”",
+          duration: 15001,
+          positon: "540 1818"
+        },
+        {
+          text: "点击“考勤打卡”",
+          duration: 11002,
+          positon: "678 1618"
+        },
+        {
+          text: "点击“上班打卡”",
+          duration: 12003,
+          positon: "552 801"
+        },
+        {
+          text: "点击“下班打卡”",
+          duration: 13004,
+          positon: "538 1223"
+        }
+      ]
+    };
 export default {
   data() {
     return {
-      form: {
-        devices: "91QEBP8563ST",
-        startTime: new Date(moment("2018-01-01 09:00:00")),
-        endTime: new Date(moment("2018-01-01 18:30:00")),
-        email: "1228678518@qq.com",
-        emailPWD: "dzurdbumhdlgichd",
-        screenPath: "E:\\",
-        flows: [
-          {
-            text: "点击“钉钉打卡”",
-            duration: 10,
-            positon: "540, 1818"
-          },
-          {
-            text: "点击“考勤打卡”",
-            duration: 11,
-            positon: "678, 1618"
-          },
-          {
-            text: "点击“上班打卡”",
-            duration: 12,
-            positon: "552, 801"
-          },
-          {
-            text: "点击“下班打卡”",
-            duration: 13,
-            positon: "538, 1223"
-          }
-        ]
-      }
+      form,
+      logs: []
     };
   },
   methods: {
     handleTest() {
-      console.log("submit!");
       this.$electron.ipcRenderer.send("render-event", {
         type: "test-devices",
         data: { devices: this.form.devices }
@@ -131,9 +163,7 @@ export default {
     save() {
       console.log(this.form);
       const data = JSON.stringify({
-        ...this.form,
-        startTime: moment(this.form.startTime).format("HH:mm:ss"),
-        endTime: moment(this.form.endTime).format("HH:mm:ss")
+        ...this.form
       });
       localStorage.setItem("DINGDINGCONFIG", data);
       // this.$electron.ipcRenderer.send("render-event", {
@@ -142,25 +172,50 @@ export default {
       // });
     },
     startRun() {
-      console.log("startTun---");
+      const data = {
+        ...this.form
+      };
+      console.log("startTun---", data);
+
+      this.$electron.ipcRenderer.send("render-event", {
+        type: "start-run",
+        data
+      });
     },
     stopRun() {
-      console.log("stopTun---");
+      this.$electron.ipcRenderer.send("render-event", {
+        type: "stop-run"
+      });
     },
     testScreen() {
       const data = {
-        ...this.form,
-        startTime: moment(this.form.startTime).format("HH:mm:ss"),
-        endTime: moment(this.form.endTime).format("HH:mm:ss")
+        ...this.form
       };
       this.$electron.ipcRenderer.send("render-event", {
         type: "test-screen",
+        data
+      });
+    },
+    testFlows() {
+      const data = {
+        ...this.form
+      };
+      this.$electron.ipcRenderer.send("render-event", {
+        type: "test-flows",
         data
       });
     }
   },
   mounted() {
     console.log(this.$electron);
+    this.$electron.ipcRenderer.on("render-event123", (event, arg) => {
+      if (this.logs.length >= 5000) {
+        this.logs.splice(0, 1);
+        this.logs.push(arg);
+      } else {
+        this.logs.push(arg);
+      }
+    });
   }
 };
 </script>
@@ -173,8 +228,8 @@ export default {
     rgba(229, 229, 229, 0.9) 100%
   );
   height: 100vh;
-  padding: 60px 80px;
-  width: 100vw;
+  padding: 10px 10px;
+  // width: 100vw;
 }
 .el-row {
   margin-bottom: 20px;
@@ -201,5 +256,16 @@ export default {
 .row-bg {
   padding: 10px 0;
   background-color: #f9fafc;
+}
+.mg-top {
+  margin-top: 8px;
+}
+.mg-bt {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.logs {
+  height: 895px;
+  overflow-y: scroll;
 }
 </style>

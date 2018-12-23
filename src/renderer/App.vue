@@ -6,10 +6,13 @@
 
 <script>
   export default {
-    name: 'electron-vue-init'
+    name: 'dingding-auto'
   }
 </script>
 
 <style>
   /* CSS */
+  *{
+    box-sizing: border-box;
+  }
 </style>

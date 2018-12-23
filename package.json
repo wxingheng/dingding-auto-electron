@@ -1,8 +1,8 @@
 {
-  "name": "electron-vue-silent-print",
+  "name": "dingding-auto",
   "version": "0.0.1",
-  "author": "",
-  "description": "An electron-vue project",
+  "author": "wuxh",
+  "description": "dingding auto",
   "license": null,
   "main": "./dist/electron/main.js",
   "scripts": {
@@ -22,7 +22,7 @@
     "postinstall": "npm run lint:fix"
   },
   "build": {
-    "productName": "electron-vue-init",
+    "productName": "钉钉自动打卡",
     "appId": "com.example.yourapp",
     "directories": {
       "output": "build"

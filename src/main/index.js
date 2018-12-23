@@ -3,8 +3,15 @@
 import {
   app,
   BrowserWindow,
-  ipcMain
+  ipcMain,
+  globalShortcut
 } from "electron";
+import {
+  Logger
+} from "builder-util/out/log";
+import {
+  start
+} from "repl";
 const exec = require("child_process").exec;
 
 
@@ -43,9 +50,38 @@ const mineType = require('mime-types');
 //   return requestOptions;
 // });
 
-let config = {};
+let config = {
+  devices: "91QEBP8563ST",
+  startTime: "08:40", // new Date(moment("2018-01-01 09:00")),
+  endTime: "18:35", //new Date(moment("2018-01-01 19:59")),
+  email: "1228678518@qq.com",
+  emailPWD: "dzurdbumhdlgichd",
+  screenPath: "E:\\",
+  flows: [{
+      text: "点击“钉钉打卡”",
+      duration: 15001,
+      positon: "540 1818"
+    },
+    {
+      text: "点击“考勤打卡”",
+      duration: 11002,
+      positon: "678 1618"
+    },
+    {
+      text: "点击“上班打卡”",
+      duration: 12003,
+      positon: "552 801"
+    },
+    {
+      text: "点击“下班打卡”",
+      duration: 13004,
+      positon: "538 1223"
+    }
+  ]
+};
 let currentScreen = 'screen.png';
 let defaultDelay = 1000;
+let run = null;
 
 /**
  * Set `__static` path to static files in production
@@ -70,8 +106,6 @@ const winURL =
 async function queue(arr) {
   let res = null
   for (let promise of arr) {
-    console.log('----', promise);
-
     res = await promise(res)
   }
   return await res
@@ -82,15 +116,34 @@ async function queue(arr) {
 //   })
 const delay = (fun, time) => {
   defaultDelay = defaultDelay + time;
-  console.log('defaultDelay-->', defaultDelay);
-    setTimeout(() => {
-      fun();
-    }, defaultDelay)
+  logs(`defaultDelay--> ${defaultDelay}`);
+  setTimeout(() => {
+    fun();
+  }, defaultDelay)
 }
 
-const logs = (str) => {
-  console.log(`log: ${str}`);
+const logs = (text) => {
+  console.log(`log: ${text}`);
+  if(mainWindow){
+    mainWindow.webContents.send('render-event123', {type: 'default', text});
+  }
 }
+
+const clickScreen = () => {
+  logs('点击电源键');
+  exec(`adb shell input keyevent 26`);
+}
+
+const openDingding = () => {
+  logs('打开钉钉');
+  exec(`adb  shell monkey -p com.alibaba.android.rimet -c android.intent.category.LAUNCHER 1`);
+}
+
+const closeDingding = () => {
+  logs('关闭钉钉');
+  exec(`adb shell am force-stop com.alibaba.android.rimet`);
+}
+
 const createScreen = () => {
   logs('截图并保存到手机');
   currentScreen = `screen${moment().format('YYYYMMDDHHmm')}.png`
@@ -102,7 +155,82 @@ const saveScreen = () => {
   exec(`adb pull sdcard/${currentScreen} E:\\`);
 }
 
-const sendEmail = () => {
+const clickPosition = (item) => {
+  logs(item.text);
+  exec(`adb shell input tap ${item.positon}`);
+}
+
+
+// 用于初始化一些变量
+const clear = () => {
+  defaultDelay = 1000;
+}
+
+
+// 启动钉钉打卡
+const startServer = () => {
+  stopServer();
+  run = setInterval(() => {
+    logs(`运行中 ${moment().format('YYYY-MM-DD HH:mm:ss')}`)
+    if (moment().format('HH:mm') <= config.startTime) {
+      goWork();
+    } else if (moment().format('HH:mm') > config.startTime && moment().format('HH:mm') <= config.endTime) {
+      offWork();
+    } else {
+      logs(`明天打卡时间  ${ config.startTime}`);
+    }
+  }, 1000)
+}
+
+const stopServer = () => {
+  logs("stop ---");
+  // if(run){
+  clearInterval(run);
+  // }
+}
+
+const goWork = () => {
+  if (config.startTime === moment().format('HH:mm')) {
+    clearInterval(run);
+    logs("上班打卡流程开始-------------------------------------")
+    clear();
+    delay(clickScreen, 1000);
+    delay(closeDingding, 10000);
+    delay(openDingding, 10000);
+    config.flows.filter(d => d.text.search("下班") === -1).forEach((item) => {
+      delay(clickPosition.bind(this, item), item.duration);
+    })
+    delay(createScreen, 1000);
+    delay(saveScreen, 6000);
+    delay(sendEmail.bind(this, {text: '上班打卡'}), 5000);
+    delay(startServer, 5000);
+  } else {
+    logs(`等待上班打卡-----${config.startTime}`)
+  }
+}
+
+const offWork = () => {
+  if (config.endTime === moment().format('HH:mm')) {
+    clearInterval(run);
+    logs("下班打卡流程开始-------------------------------------")
+    clear();
+    delay(clickScreen, 1000);
+    delay(closeDingding, 10000);
+    delay(openDingding, 10000);
+    config.flows.filter(d => d.text.search("上班") === -1).forEach((item) => {
+      delay(clickPosition.bind(this, item), item.duration);
+    })
+    delay(createScreen, 1000);
+    delay(saveScreen, 6000);
+    delay(sendEmail.bind(this, {text: '下班打卡'}), 5000);
+    delay(startServer, 5000);
+  } else {
+    logs(`等待下班打卡-----${config.endTime}`)
+  }
+}
+
+
+const sendEmail = (data) => {
   logs('发送到邮箱');
   let filePath = path.resolve(`E:/${currentScreen}`);
   let image = fs.readFileSync(filePath);
@@ -115,14 +243,15 @@ const sendEmail = () => {
   const mailOptions = {
     from: `${config.email}`, //发信邮箱
     to: `${config.email}`, //接收者邮箱
-    subject: "打卡截图", //邮件主题
-    text: "Hello！",
+    subject: `${data ? data.text: ''} 打卡截图`, //邮件主题
+    text: `${data ? data.text: ''} Hello！`,
     html: `<p>${text}</p><img src="${base64}">`
   };
 
   transporter.sendMail(mailOptions, function (error, info) {
+    clickScreen();
     if (error) {
-      return console.log(error);
+      return logs(error);
     }
   });
 
@@ -160,6 +289,10 @@ function createWindow() {
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
+  //注册快捷键
+  globalShortcut.register('ctrl+shift+5', function () {
+    mainWindow.webContents.openDevTools(); //页面调试
+  });
 }
 
 app.on("ready", createWindow);
@@ -177,22 +310,38 @@ app.on("activate", () => {
 });
 
 ipcMain.on("render-event", function (event, arg) {
-  console.log("render-event---", arg);
   switch (arg.type) {
     case "test-devices":
-      console.log("arg.data.devices", arg.data.devices);
-      exec(`adb -s ${arg.data.devices} shell input keyevent 26`);
+      clickScreen();
       break;
     case "save-config":
       // 保存config.json 文件
       break;
     case "test-screen":
-      console.log(arg.data);
       config = arg.data;
-        delay(createScreen, 1000);
-        delay(saveScreen, 6000);
-        delay(sendEmail, 5000);
-      // sendEmail();
+      delay(createScreen, 1000);
+      delay(saveScreen, 6000);
+      delay(sendEmail, 5000);
+      break;
+    case "test-flows":
+      config = arg.data;
+      clear();
+      delay(clickScreen, 1000);
+      delay(closeDingding, 10000);
+      delay(openDingding, 10000);
+      config.flows.forEach((item) => {
+        delay(clickPosition.bind(this, item), item.duration);
+      })
+      delay(createScreen, 1000);
+      delay(saveScreen, 6000);
+      delay(sendEmail, 5000);
+      break;
+    case "start-run":
+      config = arg.data;
+      startServer();
+      break;
+    case "stop-run":
+      stopServer();
       break;
   }
 });
