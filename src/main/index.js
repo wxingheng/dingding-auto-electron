@@ -2,8 +2,7 @@
 
 import { app, BrowserWindow, ipcMain } from "electron";
 const shell = require("shelljs");
-const exec = require('child_process').exec;
-
+const exec = require("child_process").exec;
 
 /**
  * Set `__static` path to static files in production
@@ -57,15 +56,14 @@ app.on("activate", () => {
 });
 
 console.log("main---");
-console.log(shell.exec("adb devices"));
-exec("adb -s 91QEBP8563ST shell input keyevent 26");
+// console.log("adb devices-----", JSON.stringify(exec("adb devices")));
 
 ipcMain.on("render-event", function(event, arg) {
   console.log("render-event---", arg);
   switch (arg.type) {
     case "test-devices":
       console.log("arg.data.devices", arg.data.devices);
-      shell.exec(`adb -s ${arg.data.devices} shell input keyevent 26`);
+      exec(`adb -s ${arg.data.devices} shell input keyevent 26`);
       break;
   }
 });
