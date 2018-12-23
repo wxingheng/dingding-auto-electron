@@ -49,6 +49,9 @@
             <el-form-item label="截图保存路径">
               <el-input v-model="form.screenPath"></el-input>
             </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="testScreen()">测试截屏并发送邮箱</el-button>
+            </el-form-item>
           </el-form>
         </el-card>
       </el-col>
@@ -88,7 +91,7 @@ export default {
         endTime: new Date(moment("2018-01-01 18:30:00")),
         email: "1228678518@qq.com",
         emailPWD: "dzurdbumhdlgichd",
-        screenPath: "D:/dingdingdaka/dingding_auto-master/screen",
+        screenPath: "E:\\",
         flows: [
           {
             text: "点击“钉钉打卡”",
@@ -126,18 +129,34 @@ export default {
       // });
     },
     save() {
-      console.log("save---");
       console.log(this.form);
-      this.$electron.ipcRenderer.send("render-event", {
-        type: "save-config",
-        data: JSON.stringify({ ...this.form })
+      const data = JSON.stringify({
+        ...this.form,
+        startTime: moment(this.form.startTime).format("HH:mm:ss"),
+        endTime: moment(this.form.endTime).format("HH:mm:ss")
       });
+      localStorage.setItem("DINGDINGCONFIG", data);
+      // this.$electron.ipcRenderer.send("render-event", {
+      //   type: "save-config",
+      //   data
+      // });
     },
     startRun() {
       console.log("startTun---");
     },
     stopRun() {
       console.log("stopTun---");
+    },
+    testScreen() {
+      const data = {
+        ...this.form,
+        startTime: moment(this.form.startTime).format("HH:mm:ss"),
+        endTime: moment(this.form.endTime).format("HH:mm:ss")
+      };
+      this.$electron.ipcRenderer.send("render-event", {
+        type: "test-screen",
+        data
+      });
     }
   },
   mounted() {

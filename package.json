@@ -57,8 +57,11 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
+    "baidu-aip-sdk": "^2.3.6",
     "element-ui": "^2.4.11",
+    "mime-types": "^2.1.21",
     "moment": "^2.23.0",
+    "nodemailer": "^4.7.0",
     "shelljs": "^0.8.3",
     "vue": "^2.5.16",
     "vue-electron": "^1.0.6",
