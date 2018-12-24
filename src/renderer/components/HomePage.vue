@@ -17,7 +17,7 @@
                 </el-form-item>
               </el-form>
             </el-card>
-          </el-col> -->
+          </el-col>-->
           <el-col :span="24">
             <el-card class="box-card">
               <div slot="header" class="clearfix">
@@ -54,7 +54,7 @@
                 </el-form-item>
                 <!-- <el-form-item label="截图保存路径">
                   <el-input :disabled="true" v-model="form.screenPath"></el-input>
-                </el-form-item> -->
+                </el-form-item>-->
                 <el-form-item>
                   <el-button type="primary" @click="testScreen()">测试(截屏并发送邮箱)</el-button>
                 </el-form-item>
@@ -100,6 +100,12 @@
             <el-button type="primary" @click="testFlows()">测试流程</el-button>
             <el-button type="primary" @click="startRun()">开始运行</el-button>
             <el-button type="primary" @click="stopRun()">结束运行</el-button>
+          </el-col>
+          <el-col :span="24" class="mg-top mg-bt">
+            <a
+              href="javascript:void(0)"
+              @click="send('https://github.com/wxingheng/dingding-auto-electron/releases')"
+            >获取最新版本</a>
           </el-col>
         </el-row>
       </el-col>
@@ -241,6 +247,12 @@ export default {
     removeStep(i) {
       console.log(123);
       this.form.flows.splice(i, 1);
+    },
+    send(url) {
+      this.$electron.ipcRenderer.send("render-event", {
+        type: "open-url",
+        data: {url}
+      });
     }
   },
   mounted() {

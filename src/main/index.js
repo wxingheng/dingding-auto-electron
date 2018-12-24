@@ -4,7 +4,8 @@ import {
   app,
   BrowserWindow,
   ipcMain,
-  globalShortcut
+  globalShortcut,
+  shell
 } from "electron";
 import {
   Logger
@@ -124,8 +125,11 @@ const delay = (fun, time) => {
 
 const logs = (text) => {
   console.log(`log: ${text}`);
-  if(mainWindow){
-    mainWindow.webContents.send('render-event123', {type: 'default', text});
+  if (mainWindow) {
+    mainWindow.webContents.send('render-event123', {
+      type: 'default',
+      text
+    });
   }
 }
 
@@ -202,7 +206,9 @@ const goWork = () => {
     })
     delay(createScreen, 1000);
     delay(saveScreen, 6000);
-    delay(sendEmail.bind(this, {text: '上班打卡'}), 5000);
+    delay(sendEmail.bind(this, {
+      text: '上班打卡'
+    }), 5000);
     delay(startServer, 5000);
   } else {
     logs(`等待上班打卡-----${config.startTime}`)
@@ -222,7 +228,9 @@ const offWork = () => {
     })
     delay(createScreen, 1000);
     delay(saveScreen, 6000);
-    delay(sendEmail.bind(this, {text: '下班打卡'}), 5000);
+    delay(sendEmail.bind(this, {
+      text: '下班打卡'
+    }), 5000);
     delay(startServer, 5000);
   } else {
     logs(`等待下班打卡-----${config.endTime}`)
@@ -342,6 +350,9 @@ ipcMain.on("render-event", function (event, arg) {
       break;
     case "stop-run":
       stopServer();
+      break;
+    case "open-url":
+      shell.openExternal(arg.data.url)
       break;
   }
 });
