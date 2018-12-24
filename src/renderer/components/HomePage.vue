@@ -18,7 +18,7 @@
               </el-form>
             </el-card>
           </el-col> -->
-          <el-col :span="24" class="mg-top">
+          <el-col :span="24">
             <el-card class="box-card">
               <div slot="header" class="clearfix">
                 <span>基本配置</span>
@@ -302,7 +302,7 @@ export default {
   margin-bottom: 20px;
 }
 .logs {
-  height: 895px;
+  height: 1036px;
   overflow-y: scroll;
 }
 </style>
