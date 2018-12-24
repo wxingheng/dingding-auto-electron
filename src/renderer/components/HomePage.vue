@@ -3,7 +3,7 @@
     <el-row>
       <el-col :span="16">
         <el-row>
-          <el-col :span="24">
+          <!-- <el-col :span="24">
             <el-card class="box-card">
               <div slot="header" class="clearfix">
                 <span>打卡设备</span>
@@ -17,7 +17,7 @@
                 </el-form-item>
               </el-form>
             </el-card>
-          </el-col>
+          </el-col> -->
           <el-col :span="24" class="mg-top">
             <el-card class="box-card">
               <div slot="header" class="clearfix">
@@ -52,9 +52,9 @@
                 <el-form-item label="邮箱秘钥">
                   <el-input v-model="form.emailPWD"></el-input>
                 </el-form-item>
-                <el-form-item label="截图保存路径">
+                <!-- <el-form-item label="截图保存路径">
                   <el-input :disabled="true" v-model="form.screenPath"></el-input>
-                </el-form-item>
+                </el-form-item> -->
                 <el-form-item>
                   <el-button type="primary" @click="testScreen()">测试(截屏并发送邮箱)</el-button>
                 </el-form-item>
@@ -246,7 +246,7 @@ export default {
   mounted() {
     console.log(this.$electron);
     this.$electron.ipcRenderer.on("render-event123", (event, arg) => {
-      if (this.logs.length >= 5000) {
+      if (this.logs.length >= 1000) {
         this.logs.splice(0, 1);
         this.logs.push(arg);
       } else {
