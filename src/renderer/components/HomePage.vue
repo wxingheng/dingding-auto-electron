@@ -55,12 +55,20 @@
                 </el-form-item>
                 <el-form-item label="邮箱秘钥">
                   <el-input v-model="form.emailPWD"></el-input>
+                  <a
+                    href="javascript:void(0)"
+                    @click="send('https://jingyan.baidu.com/article/6079ad0eb14aaa28fe86db5a.html')"
+                  >如何获取邮箱秘钥？</a>
                 </el-form-item>
                 <!-- <el-form-item label="截图保存路径">
                   <el-input :disabled="true" v-model="form.screenPath"></el-input>
                 </el-form-item>-->
                 <el-form-item>
                   <el-button type="primary" @click="testScreen()">测试(截屏并发送邮箱)</el-button>
+                  <a
+                    href="javascript:void(0)"
+                    @click="send('https://adb.clockworkmod.com')"
+                  >没反应？你的电脑没有ADB吧。</a>
                 </el-form-item>
               </el-form>
             </el-card>
@@ -70,6 +78,10 @@
               <div slot="header" class="clearfix">
                 <span>流程配置</span>
               </div>
+              <a
+                href="javascript:void(0)"
+                @click="send('https://github.com/wxingheng/dingding_auto')"
+              >怎么看自己的像素点？</a>
               <el-form :inline="true" label-width="40px">
                 <el-form-item :label="'延迟'">
                   <el-input v-model="add.duration"></el-input>
