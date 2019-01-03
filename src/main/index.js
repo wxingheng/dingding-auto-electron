@@ -1,26 +1,16 @@
 "use strict";
 
-import {
-  app,
-  BrowserWindow,
-  ipcMain,
-  globalShortcut,
-  shell
-} from "electron";
-import {
-  Logger
-} from "builder-util/out/log";
-import {
-  start
-} from "repl";
+import { app, BrowserWindow, ipcMain, globalShortcut, shell } from "electron";
+import { Logger } from "builder-util/out/log";
+import { start } from "repl";
 const exec = require("child_process").exec;
-
-
-const moment = require('moment');
+const moment = require("moment");
 const nodemailer = require("nodemailer");
-const fs = require('fs');
-const path = require('path');
-const mineType = require('mime-types');
+const fs = require("fs");
+const path = require("path");
+const mineType = require("mime-types");
+const request = require("request");
+var holiday = 13; // 0 需要上班
 
 // const AipOcrClient = require("baidu-aip-sdk").ocr;
 // // 设置APPID/AK/SK
@@ -58,7 +48,8 @@ let config = {
   email: "1228678518@qq.com",
   emailPWD: "dzurdbumhdlgichd",
   screenPath: "E:\\",
-  flows: [{
+  flows: [
+    {
       text: "点击“钉钉打卡”",
       duration: 15001,
       positon: "540 1818"
@@ -80,7 +71,7 @@ let config = {
     }
   ]
 };
-let currentScreen = 'screen.png';
+let currentScreen = "screen.png";
 let defaultDelay = 1000;
 let run = null;
 
@@ -96,20 +87,18 @@ if (process.env.NODE_ENV !== "development") {
 
 let mainWindow;
 const winURL =
-  process.env.NODE_ENV === "development" ?
-  `http://localhost:9080` :
-  `file://${__dirname}/index.html`;
-
-
+  process.env.NODE_ENV === "development"
+    ? `http://localhost:9080`
+    : `file://${__dirname}/index.html`;
 
 // 打卡相关逻辑
 
 async function queue(arr) {
-  let res = null
+  let res = null;
   for (let promise of arr) {
-    res = await promise(res)
+    res = await promise(res);
   }
-  return await res
+  return await res;
 }
 // queue([a, b, c])
 //   .then(data => {
@@ -120,143 +109,189 @@ const delay = (fun, time) => {
   logs(`defaultDelay--> ${defaultDelay}`);
   setTimeout(() => {
     fun();
-  }, defaultDelay)
-}
+  }, defaultDelay);
+};
 
-const logs = (text) => {
+const logs = text => {
   console.log(`log: ${text}`);
   if (mainWindow) {
-    mainWindow.webContents.send('render-event123', {
-      type: 'default',
+    mainWindow.webContents.send("render-event123", {
+      type: "default",
       text
     });
   }
-}
+};
 
 const clickScreen = () => {
-  logs('点击电源键');
+  logs("点击电源键");
   exec(`adb shell input keyevent 26`);
-}
+};
 
 const openDingding = () => {
-  logs('打开钉钉');
-  exec(`adb  shell monkey -p com.alibaba.android.rimet -c android.intent.category.LAUNCHER 1`);
-}
+  logs("打开钉钉");
+  exec(
+    `adb  shell monkey -p com.alibaba.android.rimet -c android.intent.category.LAUNCHER 1`
+  );
+};
 
 const closeDingding = () => {
-  logs('关闭钉钉');
+  logs("关闭钉钉");
   exec(`adb shell am force-stop com.alibaba.android.rimet`);
-}
+};
 
 const createScreen = () => {
-  logs('截图并保存到手机');
-  currentScreen = `screen${moment().format('YYYYMMDDHHmm')}.png`
+  logs("截图并保存到手机");
+  currentScreen = `screen${moment().format("YYYYMMDDHHmm")}.png`;
   exec(`adb shell screencap -p sdcard/${currentScreen}`);
-}
+};
 
 const saveScreen = () => {
-  logs('转移截图到电脑');
+  logs("转移截图到电脑");
   exec(`adb pull sdcard/${currentScreen} E:\\`);
-}
+};
 
-const clickPosition = (item) => {
+const clickPosition = item => {
   logs(item.text);
   exec(`adb shell input tap ${item.positon}`);
-}
-
+};
 
 // 用于初始化一些变量
 const clear = () => {
   defaultDelay = 1000;
-}
-
-
+};
+const updateHoliDay = date => {
+  logs(`识别公休日-----------------》》》 ${date}`);
+  request(`http://api.goseek.cn/Tools/holiday?date=${date}`, function(
+    error,
+    response,
+    body
+  ) {
+    body = JSON.parse(body);
+    if (body.code == 10000) {
+      holiday = body.data;
+      mainWindow.webContents.send("render-event123", {
+        type: "holiday",
+        holiday
+      });
+    }
+  });
+};
 // 启动钉钉打卡
 const startServer = () => {
   stopServer();
+  if (moment().format("HH:mm") > config.endTime) {
+    updateHoliDay(
+      moment()
+        .add(1, "days")
+        .format("YYYYMMDD")
+    );
+  } else {
+    updateHoliDay(moment().format("YYYYMMDD"));
+  }
   run = setInterval(() => {
-    logs(`运行中 ${moment().format('YYYY-MM-DD HH:mm:ss')}`)
-    if (moment().format('HH:mm') <= config.startTime) {
-      goWork();
-    } else if (moment().format('HH:mm') > config.startTime && moment().format('HH:mm') <= config.endTime) {
-      offWork();
+    logs(`运行中 ${moment().format("YYYY-MM-DD HH:mm:ss")}`);
+    if (holiday) {
+      logs(`休息了，不打卡罗！！！`);
+      if (moment().format("HH:mm") == "00:02") {
+        updateHoliDay(moment().format("YYYYMMDD"));
+      }
     } else {
-      logs(`明天打卡时间  ${ config.startTime}`);
+      if (moment().format("HH:mm") <= config.startTime) {
+        goWork();
+      } else if (
+        moment().format("HH:mm") > config.startTime &&
+        moment().format("HH:mm") <= config.endTime
+      ) {
+        offWork();
+      } else {
+        logs(`明天打卡时间  ${config.startTime} -- ${holiday}`);
+      }
     }
-  }, 1000)
-}
+  }, 1000);
+};
 
 const stopServer = () => {
   logs("stop ---");
   // if(run){
   clearInterval(run);
   // }
-}
+};
 
 const goWork = () => {
-  if (config.startTime === moment().format('HH:mm')) {
+  if (config.startTime === moment().format("HH:mm")) {
     clearInterval(run);
-    logs("上班打卡流程开始-------------------------------------")
+    logs("上班打卡流程开始-------------------------------------");
     clear();
     delay(clickScreen, 1000);
     delay(closeDingding, 10000);
     delay(openDingding, 10000);
-    config.flows.filter(d => d.text.search("下班") === -1).forEach((item) => {
-      delay(clickPosition.bind(this, item), item.duration);
-    })
+    config.flows
+      .filter(d => d.text.search("下班") === -1)
+      .forEach(item => {
+        delay(clickPosition.bind(this, item), item.duration);
+      });
     delay(createScreen, 1000);
     delay(saveScreen, 6000);
-    delay(sendEmail.bind(this, {
-      text: '上班打卡'
-    }), 5000);
+    delay(
+      sendEmail.bind(this, {
+        text: "上班打卡"
+      }),
+      5000
+    );
     delay(startServer, 5000);
   } else {
-    logs(`等待上班打卡-----${config.startTime}`)
+    logs(`等待上班打卡-----${config.startTime}`);
   }
-}
+};
 
 const offWork = () => {
-  if (config.endTime === moment().format('HH:mm')) {
+  if (config.endTime === moment().format("HH:mm")) {
     clearInterval(run);
-    logs("下班打卡流程开始-------------------------------------")
+    logs("下班打卡流程开始-------------------------------------");
     clear();
     delay(clickScreen, 1000);
     delay(closeDingding, 10000);
     delay(openDingding, 10000);
-    config.flows.filter(d => d.text.search("上班") === -1).forEach((item) => {
-      delay(clickPosition.bind(this, item), item.duration);
-    })
+    config.flows
+      .filter(d => d.text.search("上班") === -1)
+      .forEach(item => {
+        delay(clickPosition.bind(this, item), item.duration);
+      });
     delay(createScreen, 1000);
     delay(saveScreen, 6000);
-    delay(sendEmail.bind(this, {
-      text: '下班打卡'
-    }), 5000);
+    delay(
+      sendEmail.bind(this, {
+        text: "下班打卡"
+      }),
+      5000
+    );
     delay(startServer, 5000);
   } else {
-    logs(`等待下班打卡-----${config.endTime}`)
+    logs(`等待下班打卡-----${config.endTime}`);
   }
-}
+};
 
-
-const sendEmail = (data) => {
-  logs('发送到邮箱');
+const sendEmail = data => {
+  logs("发送到邮箱");
   let filePath = path.resolve(`E:/${currentScreen}`);
   let image = fs.readFileSync(filePath);
-  let text = '';
-  image = new Buffer(image).toString('base64');
+  let text = "";
+  image = new Buffer(image).toString("base64");
 
-  let base64 = 'data:' + mineType.lookup(filePath) + ';base64,' + image;
-  const transporter = nodemailer.createTransport(`smtps://${config.email}:${config.emailPWD}@smtp.qq.com`);
+  let base64 = "data:" + mineType.lookup(filePath) + ";base64," + image;
+  const transporter = nodemailer.createTransport(
+    `smtps://${config.email}:${config.emailPWD}@smtp.qq.com`
+  );
 
   const mailOptions = {
     from: `${config.email}`, //发信邮箱
     to: `${config.email}`, //接收者邮箱
-    subject: `${data ? data.text: ''} 打卡截图`, //邮件主题
-    text: `${data ? data.text: ''} Hello！`,
+    subject: `${data ? data.text : ""} 打卡截图`, //邮件主题
+    text: `${data ? data.text : ""} Hello！`,
     html: `<p>${text}</p><img src="${base64}">`
   };
 
-  transporter.sendMail(mailOptions, function (error, info) {
+  transporter.sendMail(mailOptions, function(error, info) {
     clickScreen();
     if (error) {
       return logs(error);
@@ -273,10 +308,9 @@ const sendEmail = (data) => {
   //     // 如果发生网络错误
   //     console.log(err);
   // });
-}
+};
 
 // 打卡相关逻辑
-
 
 function createWindow() {
   /**
@@ -298,7 +332,7 @@ function createWindow() {
     mainWindow = null;
   });
   //注册快捷键
-  globalShortcut.register('ctrl+shift+5', function () {
+  globalShortcut.register("ctrl+shift+5", function() {
     mainWindow.webContents.openDevTools(); //页面调试
   });
 }
@@ -317,7 +351,7 @@ app.on("activate", () => {
   }
 });
 
-ipcMain.on("render-event", function (event, arg) {
+ipcMain.on("render-event", function(event, arg) {
   switch (arg.type) {
     case "test-devices":
       clickScreen();
@@ -337,9 +371,9 @@ ipcMain.on("render-event", function (event, arg) {
       delay(clickScreen, 1000);
       delay(closeDingding, 10000);
       delay(openDingding, 10000);
-      config.flows.forEach((item) => {
+      config.flows.forEach(item => {
         delay(clickPosition.bind(this, item), item.duration);
-      })
+      });
       delay(createScreen, 1000);
       delay(saveScreen, 6000);
       delay(sendEmail, 5000);
@@ -352,12 +386,10 @@ ipcMain.on("render-event", function (event, arg) {
       stopServer();
       break;
     case "open-url":
-      shell.openExternal(arg.data.url)
+      shell.openExternal(arg.data.url);
       break;
   }
 });
-
-
 
 /**
  * Auto Updater

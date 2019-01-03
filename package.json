@@ -1,12 +1,13 @@
 {
   "name": "dingding-auto",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "author": "wuxh",
   "description": "dingding auto",
   "license": null,
   "main": "./dist/electron/main.js",
   "scripts": {
     "build": "node .electron-vue/build.js && electron-builder",
+    "build:win": " node .electron-vue/build.js && build --win --ia32",
     "build:dir": "node .electron-vue/build.js && electron-builder --dir",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
     "build:web": "cross-env BUILD_TARGET=web node .electron-vue/build.js",
@@ -62,6 +63,7 @@
     "mime-types": "^2.1.21",
     "moment": "^2.23.0",
     "nodemailer": "^4.7.0",
+    "request": "^2.88.0",
     "shelljs": "^0.8.3",
     "vue": "^2.5.16",
     "vue-electron": "^1.0.6",

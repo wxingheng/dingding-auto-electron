@@ -23,6 +23,10 @@
               <div slot="header" class="clearfix">
                 <span>基本配置</span>
               </div>
+              <p style="text-align: center;margin-bottom: 10px;">
+                <el-tag v-if="!holiday" type="success" size="medium">我在工作，请放心！</el-tag>
+                <el-tag v-if="holiday" type="warning" size="medium">你休息的时候我不打卡^-^ !</el-tag>
+              </p>
               <el-form label-width="120px">
                 <el-form-item label="上班时间">
                   <el-time-select
@@ -176,7 +180,8 @@ export default {
         duration: 10000,
         text: "点击“xxxx”",
         positon: "x y"
-      }
+      },
+      holiday: 0
     };
   },
   methods: {
@@ -251,18 +256,24 @@ export default {
     send(url) {
       this.$electron.ipcRenderer.send("render-event", {
         type: "open-url",
-        data: {url}
+        data: { url }
       });
     }
   },
   mounted() {
     console.log(this.$electron);
     this.$electron.ipcRenderer.on("render-event123", (event, arg) => {
-      if (this.logs.length >= 1000) {
-        this.logs.splice(0, 1);
-        this.logs.push(arg);
-      } else {
-        this.logs.push(arg);
+      switch (arg.type) {
+        case "default":
+          if (this.logs.length >= 1000) {
+            this.logs.splice(0, 1);
+            this.logs.push(arg);
+          } else {
+            this.logs.push(arg);
+          }
+          break;
+        case "holiday":
+          this.holiday = arg.holiday;
       }
     });
   }
