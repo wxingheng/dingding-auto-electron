@@ -230,8 +230,8 @@ const goWork = () => {
       .forEach(item => {
         delay(clickPosition.bind(this, item), item.duration);
       });
-    delay(createScreen, 1000);
-    delay(saveScreen, 6000);
+    delay(createScreen, 10000);
+    delay(saveScreen, 10000);
     delay(
       sendEmail.bind(this, {
         text: "上班打卡"
@@ -257,8 +257,8 @@ const offWork = () => {
       .forEach(item => {
         delay(clickPosition.bind(this, item), item.duration);
       });
-    delay(createScreen, 1000);
-    delay(saveScreen, 6000);
+    delay(createScreen, 10000);
+    delay(saveScreen, 10000);
     delay(
       sendEmail.bind(this, {
         text: "下班打卡"
@@ -361,8 +361,8 @@ ipcMain.on("render-event", function(event, arg) {
       break;
     case "test-screen":
       config = arg.data;
-      delay(createScreen, 1000);
-      delay(saveScreen, 6000);
+      delay(createScreen, 10000);
+      delay(saveScreen, 10000);
       delay(sendEmail, 5000);
       break;
     case "test-flows":
@@ -374,8 +374,8 @@ ipcMain.on("render-event", function(event, arg) {
       config.flows.forEach(item => {
         delay(clickPosition.bind(this, item), item.duration);
       });
-      delay(createScreen, 1000);
-      delay(saveScreen, 6000);
+      delay(createScreen, 10000);
+      delay(saveScreen, 10000);
       delay(sendEmail, 5000);
       break;
     case "start-run":
