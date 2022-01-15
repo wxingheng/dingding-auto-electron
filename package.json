@@ -64,7 +64,7 @@
     "moment": "^2.23.0",
     "nodemailer": "^4.7.0",
     "request": "^2.88.0",
-    "shelljs": "^0.8.3",
+    "shelljs": "^0.8.5",
     "vue": "^2.5.16",
     "vue-electron": "^1.0.6",
     "vue-router": "^3.0.1",
